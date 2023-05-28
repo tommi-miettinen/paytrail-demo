@@ -1,16 +1,39 @@
-import React, { useState } from "react";
-import { TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Linking, TouchableOpacity, View } from "react-native";
 import Navbar from "./src/components/Navbar";
 import Store from "./src/views/Store";
 import OrderSummary from "./src/views/OrderSummary";
 import Payment from "./src/views/Payment";
 import { useTotalItems } from "./src/store/cartStore";
-
+import paytrailAPI from "./src/api/paytrailAPI";
 import "./styles";
 
 export default function App() {
   const [view, setView] = useState("store");
   const totalItems = useTotalItems();
+
+  useEffect(() => {
+    paytrailAPI.createPayment();
+    const handleDeepLink = (event) => {
+      let { url } = event;
+      if (!url) return;
+      if (url.includes("payment/success")) {
+        setView("store");
+      }
+    };
+
+    // Handle deep linking when the app is completely closed
+    Linking.getInitialURL().then((url) => {
+      console.log(url);
+      let fakeEvent = { url };
+      handleDeepLink(fakeEvent);
+    });
+
+    const listener = Linking.addEventListener("url", handleDeepLink);
+
+    return () => listener.remove();
+  }, []);
+
   return (
     <View className="bg-1 h-full w-full text-white">
       {view === "store" && <Store />}

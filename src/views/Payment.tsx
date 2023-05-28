@@ -4,6 +4,7 @@ import paytrailAPI from "../api/paytrailAPI";
 
 const Payment = () => {
   const [providers, setProviders] = useState<PaymentMethod[]>([]);
+
   useEffect(() => {
     fetchProviders();
   }, []);
@@ -13,8 +14,6 @@ const Payment = () => {
     if (!data) return;
     setProviders(data);
   };
-
-  console.log(providers);
 
   return (
     <View>

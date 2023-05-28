@@ -1,11 +1,10 @@
 import axios from "axios";
+import { createPaytrailHeaders } from "../utils/paytrail.utils";
 import { v4 as uuid } from "uuid";
 
 const merchantId = 375917;
-const secretKey = "SAIPPUAKAUPPIAS";
-
-const PROXY_URL = "https://cors-anywhere.herokuapp.com/";
-const baseUrl = "https://services.paytrail.com";
+const PROXY_URL = "https://cors-anywhere.herokuapp.com";
+const baseUrl = `${PROXY_URL}/https://services.paytrail.com`;
 
 interface PaymentMethod {
   id: string;
@@ -15,41 +14,48 @@ interface PaymentMethod {
   group: string;
 }
 
-const textEncoder = new TextEncoder();
-
-const calculateHmac = async (secret, params, body) => {
-  const hmacPayload = Object.keys(params)
-    .sort()
-    .map((key) => [key, params[key]].join(":"))
-    .concat(body ? JSON.stringify(body) : "")
-    .join("\n");
-
-  const key = await window.crypto.subtle.importKey("raw", textEncoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-
-  const signature = await window.crypto.subtle.sign("HMAC", key, textEncoder.encode(hmacPayload));
-
-  let hashArray = Array.from(new Uint8Array(signature));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-};
-
 const getPaymentProviders = async () => {
   try {
-    const headers: any = {
-      "checkout-account": merchantId,
-      "checkout-algorithm": "sha256",
-      "checkout-method": "GET",
-      "checkout-nonce": uuid(),
-      "checkout-timestamp": new Date().toISOString(),
+    const response = await axios.get(`${baseUrl}/merchants/payment-providers`, {
+      headers: await createPaytrailHeaders("GET"),
+    });
+    return response.data as PaymentMethod[];
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const createPayment = async () => {
+  try {
+    const body = {
+      stamp: uuid(),
+      reference: "3759170",
+      amount: 1525,
+      currency: "EUR",
+      language: "FI",
+      items: [
+        {
+          unitPrice: 1525,
+          units: 1,
+          vatPercentage: 24,
+          productCode: "#1234",
+          deliveryDate: "2018-09-01",
+        },
+      ],
+      customer: {
+        email: "test.customer@example.com",
+      },
+      redirectUrls: {
+        success: "http://localhost:19006/payment/success",
+        cancel: "https://ecom.example.com/cart/cancel",
+      },
     };
 
-    const signature = await calculateHmac(secretKey, headers, "");
-    headers.signature = signature;
-
-    const response = await axios.get(`${PROXY_URL}${baseUrl}/merchants/payment-providers`, {
-      headers: headers,
+    const response = await axios.post(`${baseUrl}/payments`, body, {
+      headers: await createPaytrailHeaders("POST", body),
     });
 
-    return response.data as PaymentMethod[];
+    console.log(response);
   } catch (err) {
     console.log(err);
   }
@@ -57,4 +63,5 @@ const getPaymentProviders = async () => {
 
 export default {
   getPaymentProviders,
+  createPayment,
 };
