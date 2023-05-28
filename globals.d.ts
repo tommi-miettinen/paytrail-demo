@@ -13,3 +13,11 @@ interface Product {
     count: number;
   };
 }
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  icon: string;
+  svg: string;
+  group: string;
+}
