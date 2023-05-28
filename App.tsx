@@ -8,31 +8,31 @@ import { useTotalItems } from "./src/store/cartStore";
 import paytrailAPI from "./src/api/paytrailAPI";
 import "./styles";
 
-export default function App() {
+const App = () => {
   const [view, setView] = useState("store");
   const totalItems = useTotalItems();
 
   useEffect(() => {
-    paytrailAPI.createPayment();
-    const handleDeepLink = (event) => {
-      let { url } = event;
+    const handleDeepLink = ({ url }) => {
       if (!url) return;
       if (url.includes("payment/success")) {
         setView("store");
       }
     };
 
-    // Handle deep linking when the app is completely closed
-    Linking.getInitialURL().then((url) => {
-      console.log(url);
-      let fakeEvent = { url };
-      handleDeepLink(fakeEvent);
-    });
+    Linking.getInitialURL().then((url) => handleDeepLink({ url }));
 
     const listener = Linking.addEventListener("url", handleDeepLink);
-
     return () => listener.remove();
   }, []);
+
+  const handlePayment = async () => {
+    try {
+      const result = await paytrailAPI.createPayment();
+
+      await Linking.openURL(result.href as string);
+    } catch (error) {}
+  };
 
   return (
     <View className="bg-1 h-full w-full text-white">
@@ -45,10 +45,12 @@ export default function App() {
         </TouchableOpacity>
       )}
       {view === "summary" && (
-        <TouchableOpacity onPress={() => setView("payment")} className="sticky bottom-12 m-4 rounded-lg text-white p-4  bg-blue-600">
-          Siirry kassalle {totalItems}
+        <TouchableOpacity onPress={() => handlePayment()} className="sticky bottom-12 m-4 rounded-lg text-white p-4  bg-blue-600">
+          Maksamaan {totalItems}
         </TouchableOpacity>
       )}
     </View>
   );
-}
+};
+
+export default App;

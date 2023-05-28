@@ -47,7 +47,7 @@ const createPayment = async () => {
       },
       redirectUrls: {
         success: "http://localhost:19006/payment/success",
-        cancel: "https://ecom.example.com/cart/cancel",
+        cancel: "http://localhost:19006",
       },
     };
 
@@ -55,7 +55,7 @@ const createPayment = async () => {
       headers: await createPaytrailHeaders("POST", body),
     });
 
-    console.log(response);
+    return response.data;
   } catch (err) {
     console.log(err);
   }

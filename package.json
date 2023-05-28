@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.18.1",
     "axios": "^1.4.0",
     "expo": "46.0.8",
     "expo-status-bar": "1.4.0",
